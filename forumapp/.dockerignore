@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-lock.yaml
+dist
+.vite
+.dockerignore
+Dockerfile
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+.git
+.gitignore

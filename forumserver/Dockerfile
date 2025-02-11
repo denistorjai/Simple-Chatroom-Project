@@ -1,0 +1,20 @@
+# NODE VERSION
+FROM node:22
+
+# WORKING DIRECTORY
+WORKDIR /app
+
+# PACKAGE JSON
+COPY package*.json ./
+
+# NPM INSTALL
+RUN npm install
+
+# COPY APPLICATION
+COPY . .
+
+# EXPOSE PORT
+EXPOSE 3000
+
+# START
+CMD ["node", "server.js"]
