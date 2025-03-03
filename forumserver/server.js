@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import Message from "./models/message.js";
+import { randomUUID } from "crypto";
 dotenv.config();
 
 // Variables
@@ -29,11 +30,10 @@ app.get("/", (req, res) => {
 app.get("/messages", async (req, res) => {
   // Try Catch
   try {
-
     // Room Query
     const { room } = req.query;
 
-    // if Room not Speicifed in Query
+    // if Room not Specified in Query
     if (!room) {
       return res.status(400).json({ error: "Room ID is required" });
     }
@@ -52,23 +52,65 @@ app.get("/messages", async (req, res) => {
 // Post New Message
 app.post("/messages", async (req, res) => {
   try {
-
     // Data
-    const { author, message, room } = req.body;
+    const { author, message, room, userId } = req.body;
 
     // If Value Not Specified Return Error
     if (!author || !message || !room) {
       return res.status(400).json({ error: "Author, message, and room are required" });
     }
 
+    // Generate a unique message ID
+    const messageId = randomUUID();
+
     // New Message and Save to MongoDB
-    const newMessage = new Message({ author, message, room });
+    const newMessage = new Message({ 
+      messageId,
+      author, 
+      message, 
+      room,
+      userId: userId || "anonymous"
+    });
+    
     await newMessage.save();
     res.status(201).json(newMessage);
 
     // Error
   } catch (err) {
     console.error("Error saving message:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Edit Message
+app.put("/messages/:messageId", async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { message, userId } = req.body;
+
+    // Find the message by ID
+    const existingMessage = await Message.findOne({ messageId });
+
+    // Check if message exists
+    if (!existingMessage) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+
+    // Check if the user is the original author
+    if (existingMessage.userId !== userId) {
+      return res.status(403).json({ error: "You can only edit your own messages" });
+    }
+
+    // Update the message
+    existingMessage.message = message;
+    existingMessage.edited = true;
+    existingMessage.lastEditedAt = new Date();
+    
+    await existingMessage.save();
+    
+    res.json(existingMessage);
+  } catch (err) {
+    console.error("Error editing message:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
