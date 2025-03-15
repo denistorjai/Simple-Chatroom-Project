@@ -115,6 +115,35 @@ app.put("/messages/:messageId", async (req, res) => {
   }
 });
 
+// Delete Message
+app.delete("/messages/:messageId", async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { userId } = req.body;
+
+    // Find the message by ID
+    const existingMessage = await Message.findOne({ messageId });
+
+    // Check if message exists
+    if (!existingMessage) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+
+    // Check if the user is the original author
+    if (existingMessage.userId !== userId) {
+      return res.status(403).json({ error: "You can only delete your own messages" });
+    }
+
+    // Delete the message
+    await Message.deleteOne({ messageId });
+    
+    res.json({ success: true, messageId });
+  } catch (err) {
+    console.error("Error deleting message:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Start
 app.listen(PORT, () => {
   console.log(`Express server running at http://localhost:${PORT}/`);

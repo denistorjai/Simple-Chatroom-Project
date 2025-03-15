@@ -148,6 +148,30 @@ function App() {
     }
   };
 
+  // Delete message
+  const deleteMessage = async (messageId) => {
+    try {
+      const res = await fetch(`http://localhost:3000/messages/${messageId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId })
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        // Remove the deleted message from state
+        setMessages(prevMessages => 
+          prevMessages.filter(msg => msg.messageId !== result.messageId)
+        );
+      } else {
+        const errorData = await res.json();
+        console.error("Failed to delete message:", errorData.error);
+      }
+    } catch (err) {
+      console.error("Error deleting message:", err);
+    }
+  };
+
   // Automatically Scroll to next message
   const messagesEndRef = useRef(null);
   useEffect(() => {
@@ -220,6 +244,7 @@ function App() {
                 IsEdited={msg.edited}
                 EditTimestamp={msg.lastEditedAt}
                 onEdit={() => msg.userId === userId && startEditing(msg)}
+                onDelete={() => msg.userId === userId && deleteMessage(msg.messageId)}
               />
             )}
           </div>
