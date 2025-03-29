@@ -144,6 +144,28 @@ app.delete("/messages/:messageId", async (req, res) => {
   }
 });
 
+// Get Message by ID
+app.get("/messages/:messageId", async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    
+    // Find the message by its ID
+    const message = await Message.findOne({ messageId });
+    
+    // Check if message exists
+    if (!message) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+    
+    // Return the message
+    res.json(message);
+    
+  } catch (err) {
+    console.error("Error fetching message by ID:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Start
 app.listen(PORT, () => {
   console.log(`Express server running at http://localhost:${PORT}/`);
