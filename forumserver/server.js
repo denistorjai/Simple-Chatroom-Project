@@ -5,7 +5,11 @@ import dotenv from "dotenv";
 import cors from "cors";
 import Message from "./models/message.js";
 import { randomUUID } from "crypto";
+import User from "./models/user.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 dotenv.config();
+
 
 // Variables
 const app = express();
@@ -146,25 +150,30 @@ app.delete("/messages/:messageId", async (req, res) => {
 
 // Get Message by ID
 app.get("/messages/:messageId", async (req, res) => {
+  // Try Get Catch
   try {
+
+    // Get Message ID Param and Attempt to Find it
     const { messageId } = req.params;
-    
-    // Find the message by its ID
     const message = await Message.findOne({ messageId });
     
-    // Check if message exists
+    // If message doesnt exist then return 404 msge not found
     if (!message) {
       return res.status(404).json({ error: "Message not found" });
     }
     
-    // Return the message
+    // return
     res.json(message);
     
   } catch (err) {
+    // try catch failure
     console.error("Error fetching message by ID:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
+
+// Authentication
+
 
 // Start
 app.listen(PORT, () => {
