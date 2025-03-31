@@ -10,7 +10,6 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 dotenv.config();
 
-
 // Variables
 const app = express();
 const PORT = process.env.PORT || 3000;
