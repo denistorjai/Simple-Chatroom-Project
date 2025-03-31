@@ -54,14 +54,17 @@ app.get("/messages", async (req, res) => {
 });
 
 // Post New Message
-app.post("/messages", async (req, res) => {
+app.post("/messages", authenticateToken, async (req, res) => {
   try {
-    // Data
-    const { author, message, room, userId } = req.body;
+    // Get user info from token
+    const { username, userId } = req.user;
+    
+    // Data from request body
+    const { message, room } = req.body;
 
-    // If Value Not Specified Return Error
-    if (!author || !message || !room) {
-      return res.status(400).json({ error: "Author, message, and room are required" });
+    // If value not specified return error
+    if (!message || !room) {
+      return res.status(400).json({ error: "Message and room are required" });
     }
 
     // Generate a unique message ID
@@ -70,16 +73,15 @@ app.post("/messages", async (req, res) => {
     // New Message and Save to MongoDB
     const newMessage = new Message({ 
       messageId,
-      author, 
+      author: username, 
       message, 
       room,
-      userId: userId || "anonymous"
+      userId
     });
     
     await newMessage.save();
     res.status(201).json(newMessage);
 
-    // Error
   } catch (err) {
     console.error("Error saving message:", err);
     res.status(500).json({ error: "Server error" });

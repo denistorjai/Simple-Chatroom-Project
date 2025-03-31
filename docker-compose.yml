@@ -9,6 +9,7 @@ services:
       - mongodb
     environment:
       - MONGO_URI=mongodb://mongodb:27017/forumdb
+      - JWT_SECRET=112312312412414124
     networks:
       - forum-network
 
@@ -37,3 +38,6 @@ volumes:
 
 networks:
   forum-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1200
