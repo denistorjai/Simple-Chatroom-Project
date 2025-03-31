@@ -8,6 +8,7 @@ import { randomUUID } from "crypto";
 import User from "./models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { authenticateToken } from "./authMiddleware.js";
 dotenv.config();
 
 // Variables
@@ -172,7 +173,93 @@ app.get("/messages/:messageId", async (req, res) => {
 });
 
 // Authentication
+app.post("/auth/register", async (req, res) => {
+  try {
 
+    // get user and password
+    const { username, password } = req.body;
+    
+    // check if null
+    if (!username || !password) {
+      return res.status(400).json({ error: "Username and password are required" });
+    }
+    
+    // check if user already exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(409).json({ error: "Username already exists" });
+    }
+    
+    // hash
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    
+    // add new user to schema
+    const newUser = new User({
+      username,
+      password: hashedPassword
+    });
+    await newUser.save();
+
+    res.status(201).json({
+      success: true,
+      userId: newUser._id,
+      username: newUser.username
+    });
+    
+  } catch (err) {
+    // error
+    console.error("Error registering user:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// login
+app.post("/auth/login", async (req, res) => {
+  try {
+
+    // get user and password
+    const { username, password } = req.body;
+    
+    // check if null
+    if (!username || !password) {
+      return res.status(400).json({ error: "Username and password are required" });
+    }
+    
+    // find user in schema
+    const user = await User.findOne({ username });
+    if (!user) {
+      // not found
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+    
+    // confirm password
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      // invalid
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+    
+    // assign jwt
+    const token = jwt.sign(
+      { userId: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+    // success
+    res.json({
+      success: true,
+      token,
+      userId: user._id,
+      username: user.username
+    });
+    
+  } catch (err) {
+    // error
+    console.error("Error logging in:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 // Start
 app.listen(PORT, () => {

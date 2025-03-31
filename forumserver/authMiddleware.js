@@ -1,4 +1,3 @@
-// Imports
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
@@ -7,8 +6,7 @@ dotenv.config();
 
 // Authentication
 export const authenticateToken = (req, res, next) => {
-
-    // Get Token from  auth header
+    // Get Token from auth header
     const token = req.header("Authorization")?.split(" ")[1];
 
     // if not token, revoke 
@@ -24,5 +22,4 @@ export const authenticateToken = (req, res, next) => {
         // invalid, revoke error
         res.status(403).json({ error: "Invalid token" });
     }
-
 };
